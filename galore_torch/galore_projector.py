@@ -1,4 +1,25 @@
 import torch
+import tensorly as tl
+tl.set_backend('pytorch')
+
+import time
+from functools import wraps
+
+# get current time in milliseconds
+millis = lambda: int(round(time.time() * 1000))
+
+# creating decorator to time functions
+def timeit(func):
+    @wraps(func)
+    def _time_it(*args, **kwargs):
+        time_before = millis()
+        try:
+            return func(*args, **kwargs)
+        finally:
+            time_after = millis()
+            time_delta = time_after - time_before
+            print(f"{func.__name__} took {time_delta // 1000} seconds {time_delta % 1000} milliseconds.")
+    return _time_it
 
 class GaLoreProjector:
     def __init__(self, rank, verbose=False, update_proj_gap=200, scale=1.0, proj_type='std'):
@@ -68,6 +89,7 @@ class GaLoreProjector:
 
 
     # svd decomposition
+    @timeit
     def get_orthogonal_matrix(self, weights, rank, type):
         module_params = weights
 
@@ -80,7 +102,12 @@ class GaLoreProjector:
             float_data = True
             matrix = module_params.data
 
-        U, s, Vh = torch.linalg.svd(matrix, full_matrices = False)
+        # SVD using torch.linalg
+        # U, s, Vh = torch.linalg.svd(matrix, full_matrices = False)
+            
+        # SVD using tensorly
+        # tensorly supports truncated_svd, randomized_svd and symeig_svd
+        U, s, Vh = tl.tenalg.svd_interface(matrix.to("cpu"), method='randomized_svd', n_eigenvectors=rank)
 
         #make the smaller matrix always to be orthogonal matrix
         if type=='right':
