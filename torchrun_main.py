@@ -346,7 +346,7 @@ def main(args):
         scheduler_dict = {}
         for p in model.parameters():
             if p.requires_grad:
-                scheduler_dict[p] = training_utils.get_scheculer(
+                scheduler_dict[p] = training_utils.get_scheduler(
                     optimizer=optimizer_dict[p],
                     scheduler_type=args.scheduler,
                     num_training_steps=args.num_training_steps * 2,
@@ -372,7 +372,7 @@ def main(args):
         raise ValueError(f"Optimizer {args.optimizer} not supported")
 
     if not layer_wise_flag:
-        scheduler = training_utils.get_scheculer(
+        scheduler = training_utils.get_scheduler(
             optimizer=optimizer,
             scheduler_type=args.scheduler,
             num_training_steps=args.num_training_steps,
